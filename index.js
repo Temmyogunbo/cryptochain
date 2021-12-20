@@ -10,15 +10,22 @@ const TransactionPool = require('./wallet/transaction-pool')
 const Wallet = require('./wallet')
 const TransactionMiner = require('./app/transaction-miner')
 
+const isDevelopment = process.env.ENV === 'development'
+const DEFAULT_PORT = 3001;
+const ROOT_NODE_ADDRESS = `http://localhost:${DEFAULT_PORT}`
+
+const REDIS_URL = isDevelopment ?
+  'redis://localhost:6379' :
+  'redis://:p3a93f7233d2338355a58746cba4de96b99c9fe3e392c6ba5664ba712acdddd5b@ec2-52-203-53-204.compute-1.amazonaws.com:21830'
+
 const app = express();
 const blockchain = new Blockchain();
 const transactionPool = new TransactionPool()
 const wallet = new Wallet()
-const pubsub = new PubSub({ blockchain, transactionPool, wallet })
+const pubsub = new PubSub({ blockchain, transactionPool, wallet, redisURL: REDIS_URL })
 const transactionMiner = new TransactionMiner({ blockchain, transactionPool, wallet, pubsub })
 
-const DEFAULT_PORT = 3001;
-const ROOT_NODE_ADDRESS = `http://localhost:${DEFAULT_PORT}`
+
 
 app.use(bodyParser.json({ limit: '50mb' }));
 
@@ -71,7 +78,7 @@ app.get('/api/wallet-info', (req, res) => {
   res.json({
     address: wallet.publicKey,
     balance: Wallet.calculateBalance({
-      chain:blockchain.chain,
+      chain: blockchain.chain,
       address: wallet.publicKey
     })
   })
@@ -101,7 +108,7 @@ let PEER_PORT;
 if (process.env.GENERATE_PEER_PORT === 'true') {
   PEER_PORT = DEFAULT_PORT + Math.ceil(Math.random() * 1000)
 }
-const PORT = PEER_PORT || DEFAULT_PORT
+const PORT = process.env.PORT || PEER_PORT || DEFAULT_PORT
 
 app.listen(PORT, () => {
   console.log(`listening at localhost: ${PORT}`);

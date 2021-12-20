@@ -6,10 +6,10 @@ const CHANNELS = {
   TRANSACTION: 'TRANSACTION'
 }
 class PubSub {
-  constructor({ blockchain, transactionPool, wallet }) {
+  constructor({ blockchain, transactionPool, wallet, redisURL }) {
     // we we have publisher and subscriber in the same class so it can perform both
-    this.publisher = redis.createClient('redis://localhost:6379');
-    this.subscriber = redis.createClient('redis://localhost:6379');
+    this.publisher = redis.createClient(redisURL);
+    this.subscriber = redis.createClient(redisURL);
     this.blockchain = blockchain
     this.transactionPool = transactionPool
     this.wallet = wallet
